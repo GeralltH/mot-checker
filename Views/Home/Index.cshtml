@@ -1,0 +1,14 @@
+﻿@*@{
+    ViewData["Title"] = "MOT Checker";
+}*@
+
+<div class="text-center">
+    <label for="registration">Enter your vehicle registration</label><br /><br />
+    @*<input type="text" id="registration" name="registration"><br /><br />*@
+    <div>@Html.TextBox("registration")</div><br />
+    <input type="submit" value="Check MOT" />
+</div>
+
+<h4 style="color:purple">
+    Registration: @ViewBag.Registration<br />
+</h4>
