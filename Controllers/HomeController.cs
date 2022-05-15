@@ -33,23 +33,30 @@ namespace MOTChecker.Controllers
         }
 
         [HttpPost]
-        public ActionResult CheckMot(string registration)
+        public ActionResult Vehicle(string registration)
         {
-            GetRequest(registration);
-            //GetRequest("wp70xfr");
+            var GetVehicleData = GetRequest(registration);
+            
+            VehicleDTO vehicleData = GetVehicleData.Result;
 
-
-            return View("Vehicle");
+            if(vehicleData != null)
+            {
+                return View(vehicleData);
+            }
+            else
+            {
+                return View("Error");
+            }
         }
 
-        public async static void GetRequest(string registration)
+        public async static Task<VehicleDTO> GetRequest(string registration)
         {
             var key = "fZi8YcjrZN1cGkQeZP7Uaa4rTxua8HovaswPuIno";
 
             using (HttpClient client = new HttpClient())
             {
-                var baseUrl = "https://beta.check-mot.service.gov.uk/trade/vehicles/mot-tests?registration=";
-                Uri uri = new Uri(baseUrl + registration);
+                var baseUri = "https://beta.check-mot.service.gov.uk/trade/vehicles/mot-tests?registration=";
+                Uri uri = new Uri(baseUri + registration);
                 client.DefaultRequestHeaders.Add("x-api-key", key);
 
                 using (HttpResponseMessage response = await client.GetAsync(uri))
@@ -59,25 +66,34 @@ namespace MOTChecker.Controllers
                         using (HttpContent content = response.Content)
                         {
                             string JsonData = await content.ReadAsStringAsync();
-                            LoadJson(JsonData);
+                            return LoadJson(JsonData);
                         }
+                    }
+                    else
+                    {
+                        return null;
                     }
                 }
             }
         }
 
-        public static void LoadJson(string results)
+        public static VehicleDTO LoadJson(string results)
         {
             byte[] byteArray = Encoding.UTF8.GetBytes(results);
-            //MemoryStream stream = new MemoryStream(byteArray);
-            StreamReader reader = new StreamReader(new MemoryStream(byteArray));
-            string text = reader.ReadToEnd();
-            List<VehicleModel> vehicle = JsonConvert.DeserializeObject<List<VehicleModel>>(text);
-            Console.WriteLine(vehicle[0].Make);
-            Console.WriteLine(vehicle[0].Model);
-            Console.WriteLine(vehicle[0].PrimaryColour);
-            Console.WriteLine(vehicle[0].MotTests[0].expiryDate);
-            Console.WriteLine(vehicle[0].MotTests[0].odometerValue + vehicle[0].MotTests[0].odometerUnit);
+            MemoryStream stream = new MemoryStream(byteArray);
+            StreamReader reader = new StreamReader(stream);
+            string data = reader.ReadToEnd();
+            VehicleModel vehicle = JsonConvert.DeserializeObject<List<VehicleModel>>(data).FirstOrDefault();
+
+            VehicleDTO vehicleData = new VehicleDTO();
+            vehicleData.Registration = vehicle.Registration;
+            vehicleData.Make = vehicle.Make;
+            vehicleData.Model = vehicle.Model;
+            vehicleData.Colour = vehicle.PrimaryColour;
+            vehicleData.MotExpiryDate = vehicle.MotTests[0].expiryDate;
+            vehicleData.LastMotMileage = vehicle.MotTests[0].odometerValue + vehicle.MotTests[0].odometerUnit;
+
+            return vehicleData;
         }
     }
 }

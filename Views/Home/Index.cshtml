@@ -6,8 +6,8 @@
     <label for="registration">Enter your vehicle registration</label><br /><br />
     @*<input type="text" id="registration" name="registration"><br /><br />
     <input type="button" value="Check MOT" onclick="location.href='@Url.Action("CheckMot", "Home")'" />*@
-    <form action="Home/CheckMot" method="POST">
- <input type="registration" name="registration" /><br /><br />
+    <form action="Home/Vehicle" method="POST">
+ <input type="text" name="registration" /><br /><br />
  <input type="submit" value="Check MOT" />
 </form> 
 
