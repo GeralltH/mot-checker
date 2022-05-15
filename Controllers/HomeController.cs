@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MOTChecker.Models;
+using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Net.Http.Headers;
+using System.Text;
 
 namespace MOTChecker.Controllers
 {
@@ -29,20 +32,52 @@ namespace MOTChecker.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        [HttpGet]
-        public VehicleModel CheckMot(string registration)
+        [HttpPost]
+        public ActionResult CheckMot(string registration)
         {
-            VehicleModel model = new VehicleModel();
-            model.Registration = registration;
+            GetRequest(registration);
+            //GetRequest("wp70xfr");
 
-            return model;
+
+            return View("Vehicle");
         }
 
-        [HttpGet]
-        public ActionResult Submit(string registration)
+        public async static void GetRequest(string registration)
         {
-            ViewBag.Registration = registration;
-            return View("Index");
+            var key = "fZi8YcjrZN1cGkQeZP7Uaa4rTxua8HovaswPuIno";
+
+            using (HttpClient client = new HttpClient())
+            {
+                var baseUrl = "https://beta.check-mot.service.gov.uk/trade/vehicles/mot-tests?registration=";
+                Uri uri = new Uri(baseUrl + registration);
+                client.DefaultRequestHeaders.Add("x-api-key", key);
+
+                using (HttpResponseMessage response = await client.GetAsync(uri))
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        using (HttpContent content = response.Content)
+                        {
+                            string JsonData = await content.ReadAsStringAsync();
+                            LoadJson(JsonData);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void LoadJson(string results)
+        {
+            byte[] byteArray = Encoding.UTF8.GetBytes(results);
+            //MemoryStream stream = new MemoryStream(byteArray);
+            StreamReader reader = new StreamReader(new MemoryStream(byteArray));
+            string text = reader.ReadToEnd();
+            List<VehicleModel> vehicle = JsonConvert.DeserializeObject<List<VehicleModel>>(text);
+            Console.WriteLine(vehicle[0].Make);
+            Console.WriteLine(vehicle[0].Model);
+            Console.WriteLine(vehicle[0].PrimaryColour);
+            Console.WriteLine(vehicle[0].MotTests[0].expiryDate);
+            Console.WriteLine(vehicle[0].MotTests[0].odometerValue + vehicle[0].MotTests[0].odometerUnit);
         }
     }
 }

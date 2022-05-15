@@ -1,14 +1,14 @@
-﻿@*@{
+﻿@{
     ViewData["Title"] = "MOT Checker";
-}*@
+}
 
 <div class="text-center">
     <label for="registration">Enter your vehicle registration</label><br /><br />
-    @*<input type="text" id="registration" name="registration"><br /><br />*@
-    <div>@Html.TextBox("registration")</div><br />
-    <input type="submit" value="Check MOT" />
-</div>
+    @*<input type="text" id="registration" name="registration"><br /><br />
+    <input type="button" value="Check MOT" onclick="location.href='@Url.Action("CheckMot", "Home")'" />*@
+    <form action="Home/CheckMot" method="POST">
+ <input type="registration" name="registration" /><br /><br />
+ <input type="submit" value="Check MOT" />
+</form> 
 
-<h4 style="color:purple">
-    Registration: @ViewBag.Registration<br />
-</h4>
+</div>
