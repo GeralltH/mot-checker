@@ -26,15 +26,10 @@ namespace MOTChecker.Controllers
             return View();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-
         [HttpPost]
         public ActionResult Vehicle(string registration)
         {
+            registration = registration.Replace(" ", string.Empty); ;
             var GetVehicleData = GetRequest(registration);
             
             VehicleDTO vehicleData = GetVehicleData.Result;
@@ -83,16 +78,24 @@ namespace MOTChecker.Controllers
             MemoryStream stream = new MemoryStream(byteArray);
             StreamReader reader = new StreamReader(stream);
             string data = reader.ReadToEnd();
-            VehicleModel vehicle = JsonConvert.DeserializeObject<List<VehicleModel>>(data).FirstOrDefault();
+            VehicleModel motResults = JsonConvert.DeserializeObject<List<VehicleModel>>(data).FirstOrDefault();
 
             VehicleDTO vehicleData = new VehicleDTO();
-            vehicleData.Registration = vehicle.Registration;
-            vehicleData.Make = vehicle.Make;
-            vehicleData.Model = vehicle.Model;
-            vehicleData.Colour = vehicle.PrimaryColour;
-            vehicleData.MotExpiryDate = vehicle.MotTests[0].expiryDate;
-            vehicleData.LastMotMileage = vehicle.MotTests[0].odometerValue + vehicle.MotTests[0].odometerUnit;
-
+            vehicleData.Registration = motResults.Registration;
+            vehicleData.Make = motResults.Make;
+            vehicleData.Model = motResults.Model;
+            vehicleData.Colour = motResults.PrimaryColour;
+            if (motResults.MotTests == null)
+            {
+                vehicleData.MotExpiryDate = motResults.MotTestExpiryDate;
+                vehicleData.LastMotMileage = "N/A";
+            }
+            else
+            {
+                vehicleData.MotExpiryDate = motResults.MotTests[0].expiryDate;
+                vehicleData.LastMotMileage = motResults.MotTests[0].odometerValue + motResults.MotTests[0].odometerUnit;
+            }
+                
             return vehicleData;
         }
     }

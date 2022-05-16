@@ -7,6 +7,7 @@
         public string Model { get; set; }
         public string FuelType { get; set; }
         public string PrimaryColour { get; set; }
+        public string? MotTestExpiryDate { get; set; }
         public MotModel[]? MotTests { get; set; }
 
     }
