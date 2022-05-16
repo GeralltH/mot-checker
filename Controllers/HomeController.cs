@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MOTChecker.Models;
 using Newtonsoft.Json;
-using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MOTChecker.Controllers
 {
@@ -29,19 +28,34 @@ namespace MOTChecker.Controllers
         [HttpPost]
         public ActionResult Vehicle(string registration)
         {
-            registration = registration.Replace(" ", string.Empty); ;
-            var GetVehicleData = GetRequest(registration);
-            
-            VehicleDTO vehicleData = GetVehicleData.Result;
+            if (!string.IsNullOrEmpty(registration))
+            {
+                registration = registration.Replace(" ", string.Empty);
 
-            if(vehicleData != null)
-            {
-                return View(vehicleData);
+                if (ValidInput(registration))
+                {
+                    var GetVehicleData = GetRequest(registration);
+
+                    VehicleDTO vehicleData = GetVehicleData.Result;
+
+                    if (vehicleData != null)
+                    {
+                        return View(vehicleData);
+                    }
+                    return View("Error");
+                }
             }
-            else
-            {
-                return View("Error");
-            }
+            return View("InputError");
+        }
+
+        public bool ValidInput(string registration)
+        {
+            var regex = "^[a-zA-Z0-9]*$";
+
+            bool validLength = registration.Length > 1 & registration.Length < 8;
+            bool validCharacters = Regex.IsMatch(registration, regex);
+
+            return validLength && validCharacters;
         }
 
         public async static Task<VehicleDTO> GetRequest(string registration)
@@ -64,10 +78,11 @@ namespace MOTChecker.Controllers
                             return LoadJson(JsonData);
                         }
                     }
-                    else
+                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                     {
-                        return null;
+                        //vehicle not found
                     }
+                    return null;
                 }
             }
         }
@@ -78,9 +93,10 @@ namespace MOTChecker.Controllers
             MemoryStream stream = new MemoryStream(byteArray);
             StreamReader reader = new StreamReader(stream);
             string data = reader.ReadToEnd();
-            VehicleModel motResults = JsonConvert.DeserializeObject<List<VehicleModel>>(data).FirstOrDefault();
 
+            VehicleModel motResults = JsonConvert.DeserializeObject<List<VehicleModel>>(data).FirstOrDefault();
             VehicleDTO vehicleData = new VehicleDTO();
+
             vehicleData.Registration = motResults.Registration;
             vehicleData.Make = motResults.Make;
             vehicleData.Model = motResults.Model;
@@ -95,8 +111,9 @@ namespace MOTChecker.Controllers
                 vehicleData.MotExpiryDate = motResults.MotTests[0].expiryDate;
                 vehicleData.LastMotMileage = motResults.MotTests[0].odometerValue + motResults.MotTests[0].odometerUnit;
             }
-                
+
             return vehicleData;
         }
+
     }
 }

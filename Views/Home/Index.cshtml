@@ -1,13 +1,11 @@
-﻿@model VehicleDTO
-
-@{
+﻿@{
     ViewData["Title"] = "MOT Checker";
 }
 
 <div class="text-center">
-    <label for="registration">Enter your vehicle registration</label><br /><br />
-    <form action="Home/Vehicle" method="POST">
-        <input type="text" name="registration" /><br /><br />
-        <input type="submit" value="Check MOT" />
-    </form>
-</div>
+        <label for="registration">Enter your vehicle registration</label><br /><br />
+        <form action="Home/Vehicle" method="POST">
+            <input type="text" name="registration" /><br /><br />
+            <input type="submit" value="Check MOT" />
+        </form>
+    </div>
